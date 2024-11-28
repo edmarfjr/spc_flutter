@@ -1,16 +1,21 @@
 import 'dart:math';
 
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:spc_flttr/fx.dart';
 import 'package:spc_flttr/globals.dart';
 import 'package:spc_flttr/projeteis.dart';
 import 'package:spc_flttr/shooter_game.dart';
 
 class Player extends SpriteComponent 
-with HasGameRef<ShooterGame> {
-  double targetAngle = 0.0; // O ângulo para o qual o jogador deve girar
-  final double rotationSpeed = 15.0; // Velocidade de rotação (rad/s)
+with HasGameRef<ShooterGame>, CollisionCallbacks {
+  double targetAngle = 0.0;
+  final double rotationSpeed = 15.0;
   late final SpawnComponent _bulletSpawner;
+  double speed = 200;
+  late TextComponent playerLabel;
  // 
+ Vector2 moveDirection = Vector2.zero();
   Player()
     
       : super(
@@ -45,20 +50,59 @@ with HasGameRef<ShooterGame> {
     );
 
     game.add(_bulletSpawner);
+    add(RectangleHitbox());
+
+    
   }
   @override
   void update(double dt) {
     super.update(dt);
-
-    // Interpola suavemente o ângulo atual para o ângulo alvo
-    angle = lerpAngle(angle, targetAngle, rotationSpeed * dt);
+   
+    if (moveDirection.length > 0) {
+      position.add(moveDirection.normalized() * (speed * dt));
+      angle = lerpAngle(angle, targetAngle, rotationSpeed * dt);
+      if (_bulletSpawner.timer.isRunning() == false){
+        startShooting();
+      }
+    }else{
+      if (_bulletSpawner.timer.isRunning()){
+        stopShooting();
+      }
+    }
+    position.clamp(Vector2.zero(), gameRef.size - size);
   }
-  void move(Vector2 delta) {
-    position.add(delta);
+
+  @override
+  void onCollisionStart(
+    Set<Vector2> intersectionPoints,
+    PositionComponent other,
+  ) {
+    super.onCollisionStart(intersectionPoints, other);
+
+    if (other is Bullet && other.isIni) {
+      //game.vidas --;
+      game.mudaVida(-1);
+      other.removeFromParent();
+      if (game.vidas<=0){
+        game.add(Explosion(position: position));
+        game.onGameOver();
+        removeFromParent();
+        
+      }
+    }
+  }
+
+  void updateDirection(Vector2 direction) {
+    moveDirection = direction;
   }
 
   void startShooting() {
     _bulletSpawner.timer.start();
+    
+  }
+
+  void changeShootingPeriod(double p){
+    _bulletSpawner.period = _bulletSpawner.period*p;
   }
 
   void stopShooting() {

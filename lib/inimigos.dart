@@ -11,8 +11,9 @@ import 'package:spc_flttr/shooter_game.dart';
 class Enemy extends SpriteAnimationComponent
 with HasGameRef<ShooterGame>, CollisionCallbacks {
   static const double enemySize = 50.0;
-  static const double speed = 100.0;
-  static const int pontos = 100;
+  double speed = 100.0;
+  int pontos = 100;
+  late Vector2 targetPosition;
   int vida = 1;
   double targetAngle = 0.0; // O ângulo para o qual o jogador deve girar
   final double rotationSpeed = 15.0;
@@ -31,17 +32,6 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-
-   /* sprite = await gameRef.loadSprite('mete.png');
-      animation = await game.loadSpriteAnimation(
-      'mete.png',
-      SpriteAnimationData.sequenced(
-        amount: 1,
-        stepTime: 1,
-        textureSize: Vector2.all(14),
-      ),
-    );
-   */ 
     position = _getRandomSpawnPosition(spwArea);
     direction = _getRandomDirection();
     add(RectangleHitbox());
@@ -73,7 +63,9 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
       //removeFromParent();
       position.x = game.size.x;
     }
-
+    if (game.router.currentRoute.name == 'gameover'){
+      removeFromParent();
+    }
   }
 
   @override
@@ -83,7 +75,7 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
   ) {
     super.onCollisionStart(intersectionPoints, other);
 
-    if (other is Bullet) {
+    if (other is Bullet && other.isIni == false) {
       vida --;
       
       other.removeFromParent();
@@ -94,6 +86,13 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
         game.add(Explosion(position: position));
       }
     }
+  }
+
+  void _spawnBullet() {
+    late Bullet bullet;
+    bullet = Bullet(position:position.clone(),angle:angle,isIni: true);
+    //{super.position, required double angle, bool? isIni})
+    game.add(bullet);
   }
 
   // Calcula uma posição inicial aleatória em uma das bordas da tela
@@ -112,6 +111,14 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
       default:
         return Vector2.zero();
     }
+
+
+  }
+
+  void _updateTarget() {
+    // Atualiza o alvo para a posição atual do jogador
+    targetPosition = Vector2(game.player.position.x,game.player.position.y) ; // Substitua pela lógica da posição do jogador
+    direction = (targetPosition - position).normalized();
   }
 
   // Gera uma direção aleatória como um vetor unitário
@@ -126,16 +133,16 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
 class XenoSquid extends Enemy{
   late Timer updTrgtTmr;
 
-  static const double enemySize = 50.0;
-  static const double speed = 200.0;
-  static const int pontos = 150;
-  late Vector2 targetPosition;
+  //static const double enemySize = 50.0;
+  //static const double speed = 200.0;
+  //static const int pontos = 150;
+  //late Vector2 targetPosition;
   
   XenoSquid({
     required super.onRemoveCallback, 
     required super.spwArea
   }){
-updTrgtTmr = Timer(1.0, onTick: _updateTarget, repeat: true);
+  updTrgtTmr = Timer(1.0, onTick: _updateTarget, repeat: true);
   }
 
   @override
@@ -152,6 +159,8 @@ updTrgtTmr = Timer(1.0, onTick: _updateTarget, repeat: true);
     _updateTarget(); // Define o alvo inicial
     updTrgtTmr.start();
     super.vida = 3;
+    super.speed = 200;
+    super.pontos = 150;
   }
 
   @override
@@ -161,9 +170,41 @@ updTrgtTmr = Timer(1.0, onTick: _updateTarget, repeat: true);
     
   }
 
-  void _updateTarget() {
-    // Atualiza o alvo para a posição atual do jogador
-    targetPosition = Vector2(game.player.position.x,game.player.position.y) ; // Substitua pela lógica da posição do jogador
-    super.direction = (targetPosition - position).normalized();
+  
+}
+
+class XenoMusk extends XenoSquid {
+  late Timer shootTimer;
+
+  XenoMusk({
+    required super.onRemoveCallback,
+    required super.spwArea,
+  }) {
+    shootTimer = Timer(1.5, onTick: _spawnBullet, repeat: true); // Timer para disparar projéteis
   }
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+     animation = await game.loadSpriteAnimation(
+      'alien2.png',
+      SpriteAnimationData.sequenced(
+        amount: 3,
+        stepTime: .2,
+        textureSize: Vector2.all(16),
+      ),
+    );
+    shootTimer.start(); // Inicia o timer de disparo
+    super.vida = 2;
+    super.speed = 100;
+    super.pontos = 150;
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    shootTimer.update(dt); // Atualiza o timer de disparo
+  }
+
+
 }

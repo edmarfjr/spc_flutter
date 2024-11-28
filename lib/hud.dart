@@ -15,7 +15,6 @@ class Hud extends PositionComponent {
   @override
     Future<void> onLoad() async {
       super.onLoad();
-
       pontosTxt = TextComponent(
         text: "Pontos: ${game.pontos}",
         position: Vector2(10, 10), // Posição no HUD
@@ -30,7 +29,7 @@ class Hud extends PositionComponent {
 
       vidaTxt = TextComponent(
         text: "${game.vidas}",
-        position: Vector2(80, 10), // Posição no HUD
+        position: Vector2(game.canvasSize.x/2, 10), // Posição no HUD
         textRenderer: TextPaint(
           style: const TextStyle(
             fontSize: 20,

@@ -31,9 +31,9 @@ class Wave {
       case XenoSquid:
         enemy = XenoSquid(onRemoveCallback: onEnemyDefeated, spwArea: game.size);
         break;
-    //  case StrongEnemy:
-     //   enemy = StrongEnemy(onRemoveCallback: onEnemyDefeated, spawnArea: game.size);
-     //   break;
+      case XenoMusk:
+        enemy = XenoMusk(onRemoveCallback: onEnemyDefeated, spwArea: game.size);
+        break;
       default:
         enemy = Enemy(onRemoveCallback: onEnemyDefeated, spwArea: game.size);
     }

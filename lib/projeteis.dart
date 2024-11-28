@@ -6,9 +6,11 @@ import 'package:spc_flttr/shooter_game.dart';
 
 class Bullet extends SpriteAnimationComponent with HasGameRef<ShooterGame> {
   final double speed = 300;
+  final bool isIni;
 
-  Bullet({super.position, required double angle})
-      : super(
+  Bullet({super.position, required double angle, bool? isIni})
+      : isIni = isIni ?? false, 
+      super(
           size: Vector2(25, 25),
           anchor: Anchor.center,
         ) {
