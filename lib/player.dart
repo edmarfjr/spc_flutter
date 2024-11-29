@@ -2,8 +2,12 @@ import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
+import 'package:flutter/material.dart';
+//import 'package:flutter/material.dart';
 import 'package:spc_flttr/fx.dart';
 import 'package:spc_flttr/globals.dart';
+import 'package:spc_flttr/inimigos.dart';
 import 'package:spc_flttr/projeteis.dart';
 import 'package:spc_flttr/shooter_game.dart';
 
@@ -14,15 +18,19 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
   late final SpawnComponent _bulletSpawner;
   double speed = 200;
   late TextComponent playerLabel;
+  late Timer hitTmr;
+  bool isHit = false;
  // 
  Vector2 moveDirection = Vector2.zero();
-  Player()
-    
-      : super(
+  Player():super(
            size: Vector2(50, 50),
           anchor: Anchor.center,
-        );
-
+        ){
+          hitTmr = Timer(0.5, 
+            //onTick: _mudaHit,
+            autoStart: false,
+          );
+        }
    @override
   Future<void> onLoad() async {
     await super.onLoad();
@@ -32,7 +40,7 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
     position = gameRef.size / 2;
 
     _bulletSpawner = SpawnComponent(
-      period: .2,
+      period: .4,
       selfPositioning: true,
       factory: (index) {
         return Bullet(
@@ -46,28 +54,21 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
 
         //return bullet;
       },
-      autoStart: false,
+      //autoStart: false,
     );
 
     game.add(_bulletSpawner);
     add(RectangleHitbox());
-
     
   }
   @override
   void update(double dt) {
     super.update(dt);
-   
+    hitTmr.update(dt);
     if (moveDirection.length > 0) {
       position.add(moveDirection.normalized() * (speed * dt));
       angle = lerpAngle(angle, targetAngle, rotationSpeed * dt);
-      if (_bulletSpawner.timer.isRunning() == false){
-        startShooting();
-      }
-    }else{
-      if (_bulletSpawner.timer.isRunning()){
-        stopShooting();
-      }
+      
     }
     position.clamp(Vector2.zero(), gameRef.size - size);
   }
@@ -79,13 +80,58 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
   ) {
     super.onCollisionStart(intersectionPoints, other);
 
-    if (other is Bullet && other.isIni) {
+    if (hitTmr.isRunning() == false && (other is Enemy|| (other is Bullet && other.isIni))) {
       //game.vidas --;
+     // isHit = true;
+      final effect = SequenceEffect([
+        ColorEffect(
+        const Color.fromARGB(255, 255, 0, 0),
+          EffectController(duration: 0.5/6),
+          opacityFrom: 0,
+          opacityTo: 1,
+        ),
+        ColorEffect(
+        const Color.fromARGB(255, 255, 0, 0),
+          EffectController(duration: 0.5/6),
+          opacityFrom: 1,
+          opacityTo: 0.0,
+        ),
+        ColorEffect(
+        const Color.fromARGB(255, 255, 0, 0),
+          EffectController(duration: 0.5/6),
+          opacityFrom: 0,
+          opacityTo: 1,
+        ),
+        ColorEffect(
+        const Color.fromARGB(255, 255, 0, 0),
+          EffectController(duration: 0.5/6),
+          opacityFrom: 1,
+          opacityTo: 0.0,
+        ),
+        ColorEffect(
+        const Color.fromARGB(255, 255, 0, 0),
+          EffectController(duration: 0.5/6),
+          opacityFrom: 0,
+          opacityTo: 1,
+        ),
+        ColorEffect(
+        const Color.fromARGB(255, 255, 0, 0),
+          EffectController(duration: 0.5/6),
+          opacityFrom: 1,
+          opacityTo: 0.0,
+        ),
+      ]);
+      add(effect);
       game.mudaVida(-1);
-      other.removeFromParent();
+      hitTmr.start();
+      if(other is Bullet ){
+        other.removeFromParent();
+      }
       if (game.vidas<=0){
+        stopShooting();
         game.add(Explosion(position: position));
         game.onGameOver();
+        game.joystick.removeFromParent();
         removeFromParent();
         
       }
@@ -97,8 +143,10 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
   }
 
   void startShooting() {
-    _bulletSpawner.timer.start();
-    
+    try{
+      _bulletSpawner.timer.start();
+    }catch(e){
+    }
   }
 
   void changeShootingPeriod(double p){
@@ -106,7 +154,10 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
   }
 
   void stopShooting() {
-    _bulletSpawner.timer.stop();
+    try{
+      _bulletSpawner.timer.stop();
+    }catch(e){
+    }
   }
 }
 

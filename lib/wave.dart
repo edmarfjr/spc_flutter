@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:flame/components.dart';
 import 'package:spc_flttr/inimigos.dart';
 import 'package:spc_flttr/shooter_game.dart';
 
@@ -22,6 +23,7 @@ class Wave {
     for (int i = 0; i < iniCont; i++) {
       spawnEnemy(getRandomEnemyType());
     }
+    
   }
 
   void spawnEnemy(Type enemyType) {
@@ -35,7 +37,7 @@ class Wave {
         enemy = XenoMusk(onRemoveCallback: onEnemyDefeated, spwArea: game.size);
         break;
       default:
-        enemy = Enemy(onRemoveCallback: onEnemyDefeated, spwArea: game.size);
+        enemy = Meteoro(onRemoveCallback: onEnemyDefeated, spwArea: game.size);
     }
     game.add(enemy);
   }
@@ -43,7 +45,8 @@ class Wave {
   void onEnemyDefeated() {
     activeEnemies--;
     if (activeEnemies <= 0) {
-      onWaveComplete();
+      if(game.router.currentRoute.name == ''){onWaveComplete();}
+      print('WAVE TERMINADA');
     }
   }
 

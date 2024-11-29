@@ -22,7 +22,7 @@ class ShooterGame extends FlameGame with TapDetector, HasCollisionDetection{
   int actInis = 0;
 
   int pontos = 0;
-  int vidas = 3;
+  int vidas = 1;
 
   late final SpawnComponent spawnComponent;
 
@@ -51,38 +51,49 @@ class ShooterGame extends FlameGame with TapDetector, HasCollisionDetection{
         paint: Paint()..color = Colors.grey,
       ),
       
-     
     );
     add(router);
-
-    add(joystick);
+    
     player = Player();
-  }
+    waves = [
+      Wave(
+        iniCont: 1, 
+        iniTipo: [Meteoro],
+        onWaveComplete: showUpgradeMenu,
+        game: this,
+      ),
+      Wave(
+        iniCont: 5, 
+        iniTipo: [XenoSquid],//XenoMusk
+        onWaveComplete: showUpgradeMenu,
+        game: this,
+      ),
+      Wave(
+        iniCont: 5, 
+        iniTipo: [XenoSquid,XenoMusk],//XenoMusk
+        onWaveComplete: showUpgradeMenu,
+        game: this,
+      ),
+      Wave(
+        iniCont: 5, 
+        iniTipo: [XenoMusk],//XenoMusk
+        onWaveComplete: showUpgradeMenu,
+        game: this,
+      ),
+      Wave(
+        iniCont: 7, 
+        iniTipo: [XenoSquid],//XenoMusk
+        onWaveComplete: showUpgradeMenu,
+        game: this,
+      ),
+      Wave(
+        iniCont: 7, 
+        iniTipo: [XenoSquid,XenoMusk],//XenoMusk
+        onWaveComplete: showUpgradeMenu,
+        game: this,
+      ),
+    ];
 
-  @override
-  void onTapDown(TapDownInfo info) {
-  // Converte a posição da tela para a posição do mundo do jogo
- final worldPosition = info.eventPosition.global;
-  //player.startShooting();
-  // Mostra o joystick no local do toque
-  joystick.showAt(worldPosition);
-
-  super.onTapDown(info);
-}
-
-  @override
-  void onTapUp(TapUpInfo info) {
-    joystick.hide();
-  }
-
-  @override
-  void onTap(){
-    player.startShooting();
-  }
-
-  @override
-  void onTapCancel(){
-    player.stopShooting();
   }
 
   @override
@@ -94,9 +105,12 @@ class ShooterGame extends FlameGame with TapDetector, HasCollisionDetection{
 
 
   void startGame() {
-    
     router.pushReplacementNamed('game');
     add(player);
+    player.startShooting();
+    add(joystick);
+    print('START GAME');
+    waves[curwave].startWave();
   }
 
   void endGame(int finalScore) {
@@ -104,16 +118,15 @@ class ShooterGame extends FlameGame with TapDetector, HasCollisionDetection{
   }
 
   void onGameOver() {
-  endGame(pontos);
-  curwave=0;
-  pontos=0;
-  vidas=3;
-}
-
- 
+    endGame(pontos);
+    curwave=0;
+    pontos=0;
+    vidas=3;
+  }
 
   void nextWave() {
     curwave++;
+    print('CURWAVE: {$curwave}');
     if (curwave < waves.length) {
       waves[curwave].startWave();
     } else {
@@ -132,17 +145,43 @@ class ShooterGame extends FlameGame with TapDetector, HasCollisionDetection{
     hud.updateLives(vidas);
   }
 
-  
+  void showUpgradeMenu() {
+  final upgrades = [
+    Upgrade(
+      name: "Aumentar Velocidade",
+      applyEffect: () => player.speed *= 1.2,
+    ),
+    Upgrade(
+      name: "Mais Vida",
+      applyEffect: () => mudaVida(1),
+    ),
+    Upgrade(
+      name: "Aumenta taxa de Tiro",
+      applyEffect: () => player.changeShootingPeriod(0.8) ,
+    ),
+  ];
+
+  final menu = UpgradeMenu(upgrades: upgrades);
+  add(menu);
+  }
+
+  @override
+  void onTapDown(TapDownInfo info){
+    joystick.showAt(info.eventPosition.global);  
+  }  
+
+   @override
+  void onTapUp(TapUpInfo info){
+   // joystick.hide();  
+  }  
 }
 
 class GameScreen extends Component with HasGameRef<ShooterGame> {
+  late final TextComponent debugTxt;
   @override
   Future<void> onLoad() async {
     super.onLoad();
-
-    
-
-   game.hud = Hud(game: game);
+    game.hud = Hud(game: game);
     add(game.hud);
 
     final parallax = await game.loadParallaxComponent(
@@ -157,75 +196,27 @@ class GameScreen extends Component with HasGameRef<ShooterGame> {
     );
     add(parallax);
 
+    debugTxt = TextComponent(
+      textRenderer: TextPaint(style: const TextStyle(fontSize: 32, color: Colors.white)),
+      position: game.size*0.7,
+    );
+
+    add(debugTxt);
+    game.player.startShooting();
     //game.player = Player();
 
     //add(game.player);
 
     //defi waves
-    game.waves = [
-      Wave(
-        iniCont: 3, 
-        iniTipo: [XenoSquid],
-        onWaveComplete: showUpgradeMenu,
-        game: game,
-      ),
-      Wave(
-        iniCont: 5, 
-        iniTipo: [XenoSquid],//XenoMusk
-        onWaveComplete: showUpgradeMenu,
-        game: game,
-      ),
-      Wave(
-        iniCont: 5, 
-        iniTipo: [XenoSquid,XenoMusk],//XenoMusk
-        onWaveComplete: showUpgradeMenu,
-        game: game,
-      ),
-      Wave(
-        iniCont: 5, 
-        iniTipo: [XenoMusk],//XenoMusk
-        onWaveComplete: showUpgradeMenu,
-        game: game,
-      ),
-      Wave(
-        iniCont: 7, 
-        iniTipo: [XenoSquid],//XenoMusk
-        onWaveComplete: showUpgradeMenu,
-        game: game,
-      ),
-      Wave(
-        iniCont: 7, 
-        iniTipo: [XenoSquid,XenoMusk],//XenoMusk
-        onWaveComplete: showUpgradeMenu,
-        game: game,
-      ),
-    ];
-
-    game.waves[game.curwave].startWave();
+    
   }
 
-  void showUpgradeMenu() {
-  final upgrades = [
-    Upgrade(
-      name: "Aumentar Velocidade",
-      applyEffect: () => game.player.speed *= 1.15,
-    ),
-    Upgrade(
-      name: "Mais Vida",
-      applyEffect: () => game.mudaVida(1),
-    ),
-    Upgrade(
-      name: "Aumenta taxa de Tiro",
-      applyEffect: () => game.player.changeShootingPeriod(0.8) ,
-    ),
-  ];
-
-  final menu = UpgradeMenu(upgrades: upgrades);
-  add(menu);
-}
-
-
-  
+  @override 
+  void update (double dt)
+  {
+    super.update(dt);
+    debugTxt.text = game.waves[game.curwave].activeEnemies.toString();
+  }
 
 }
 
@@ -235,13 +226,14 @@ class MenuScreen extends Component with HasGameRef<ShooterGame> {
     super.onLoad();
 
     final title = TextComponent(
-      text: 'Shooter Game',
+      text: 'Flame in Space',
       textRenderer: TextPaint(style: const TextStyle(fontSize: 32, color: Colors.white)),
       position: gameRef.size / 2 - Vector2(0, 50),
       anchor: Anchor.center,
     );
 
     final playButton = ButtonComponent(
+      
       button: PositionComponent(
         size: Vector2(200, 50),
         children: [
@@ -258,7 +250,6 @@ class MenuScreen extends Component with HasGameRef<ShooterGame> {
       ),
       onPressed: () => gameRef.startGame(),
     );
-
     playButton.position = gameRef.size / 2 - Vector2(100, -50);
 
     add(title);
@@ -315,8 +306,8 @@ class GameOverScreen extends Component with HasGameRef<ShooterGame> {
   }
 }
 
-class DynamicJoystick extends JoystickComponent {
-   bool isVisible = false;
+class DynamicJoystick extends JoystickComponent with HasVisibility {
+   //bool isVisible = false;
   DynamicJoystick({
     required super.knob,
     required super.background,

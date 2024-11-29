@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
 import 'package:spc_flttr/fx.dart';
 import 'package:spc_flttr/globals.dart';
@@ -32,6 +33,7 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
+    
     position = _getRandomSpawnPosition(spwArea);
     direction = _getRandomDirection();
     add(RectangleHitbox());
@@ -64,6 +66,7 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
       position.x = game.size.x;
     }
     if (game.router.currentRoute.name == 'gameover'){
+      onRemoveCallback();
       removeFromParent();
     }
   }
@@ -76,14 +79,55 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
     super.onCollisionStart(intersectionPoints, other);
 
     if (other is Bullet && other.isIni == false) {
+      final effect = SequenceEffect([
+        ColorEffect(
+        const Color.fromARGB(255, 255, 0, 0),
+          EffectController(duration: 0.5/6),
+          opacityFrom: 0,
+          opacityTo: 1,
+        ),
+        ColorEffect(
+        const Color.fromARGB(255, 255, 0, 0),
+          EffectController(duration: 0.5/6),
+          opacityFrom: 1,
+          opacityTo: 0.0,
+        ),
+        ColorEffect(
+        const Color.fromARGB(255, 255, 0, 0),
+          EffectController(duration: 0.5/6),
+          opacityFrom: 0,
+          opacityTo: 1,
+        ),
+        ColorEffect(
+        const Color.fromARGB(255, 255, 0, 0),
+          EffectController(duration: 0.5/6),
+          opacityFrom: 1,
+          opacityTo: 0.0,
+        ),
+        ColorEffect(
+        const Color.fromARGB(255, 255, 0, 0),
+          EffectController(duration: 0.5/6),
+          opacityFrom: 0,
+          opacityTo: 1,
+        ),
+        ColorEffect(
+        const Color.fromARGB(255, 255, 0, 0),
+          EffectController(duration: 0.5/6),
+          opacityFrom: 1,
+          opacityTo: 0.0,
+        ),
+      ]);
+      add(effect);
+      
       vida --;
       
       other.removeFromParent();
       if (vida<=0){
-        removeFromParent();
-        onRemoveCallback(); 
+        onRemoveCallback();
         game.addPontos(pontos);
         game.add(Explosion(position: position));
+        removeFromParent();
+         
       }
     }
   }
@@ -130,6 +174,26 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
 
 }
 
+class Meteoro extends Enemy{
+  Meteoro({
+    required super.onRemoveCallback, 
+    required super.spwArea
+  });
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    animation = await game.loadSpriteAnimation(
+      'mete.png',
+      SpriteAnimationData.sequenced(
+        amount: 1,
+        stepTime: .2,
+        textureSize: Vector2.all(14),
+      ),
+    );
+  }
+}
+
 class XenoSquid extends Enemy{
   late Timer updTrgtTmr;
 
@@ -159,8 +223,8 @@ class XenoSquid extends Enemy{
     _updateTarget(); // Define o alvo inicial
     updTrgtTmr.start();
     super.vida = 3;
-    super.speed = 200;
-    super.pontos = 150;
+    super.speed = 100;
+    super.pontos = 100;
   }
 
   @override

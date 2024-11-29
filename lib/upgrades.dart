@@ -42,7 +42,7 @@ class UpgradeMenu extends PositionComponent with HasGameRef<ShooterGame> {
         ),
         onPressed: () {
           upgrade.applyEffect();
-          gameRef.nextWave();
+          game.nextWave();
           removeFromParent(); // Remove o menu após a seleção
         },
        /* children: [
