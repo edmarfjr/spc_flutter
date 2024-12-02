@@ -1,9 +1,8 @@
 import 'dart:math';
 import 'dart:ui';
-
-import 'package:flame/components.dart';
-import 'package:spc_flttr/inimigos.dart';
-import 'package:spc_flttr/shooter_game.dart';
+//import 'package:flame/components.dart';
+import 'package:spc_flttr/objetos/inimigos.dart';
+import 'package:spc_flttr/game/shooter_game.dart';
 
 class Wave {
   final int iniCont;
@@ -31,13 +30,13 @@ class Wave {
     late Enemy enemy;
     switch (enemyType) {
       case XenoSquid:
-        enemy = XenoSquid(onRemoveCallback: onEnemyDefeated, spwArea: game.size);
+        enemy = XenoSquid(onRemoveCallback: onEnemyDefeated, spwArea: game.size , gameCubit: game.gameCubit);
         break;
       case XenoMusk:
-        enemy = XenoMusk(onRemoveCallback: onEnemyDefeated, spwArea: game.size);
+        enemy = XenoMusk(onRemoveCallback: onEnemyDefeated, spwArea: game.size , gameCubit: game.gameCubit);
         break;
       default:
-        enemy = Meteoro(onRemoveCallback: onEnemyDefeated, spwArea: game.size);
+        enemy = Meteoro(onRemoveCallback: onEnemyDefeated, spwArea: game.size , gameCubit: game.gameCubit);
     }
     game.add(enemy);
   }
@@ -45,7 +44,7 @@ class Wave {
   void onEnemyDefeated() {
     activeEnemies--;
     if (activeEnemies <= 0) {
-      if(game.router.currentRoute.name == ''){onWaveComplete();}
+      if(game.router.currentRoute.name == 'game'){onWaveComplete();}
       print('WAVE TERMINADA');
     }
   }

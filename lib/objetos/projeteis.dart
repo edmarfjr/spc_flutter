@@ -2,10 +2,10 @@ import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:spc_flttr/shooter_game.dart';
+import 'package:spc_flttr/game/shooter_game.dart';
 
 class Bullet extends SpriteAnimationComponent with HasGameRef<ShooterGame> {
-  final double speed = 300;
+  final double speed = 400;
   final bool isIni;
 
   Bullet({super.position, required double angle, bool? isIni})

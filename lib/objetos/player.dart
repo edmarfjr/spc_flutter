@@ -4,12 +4,14 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
+//import 'package:flutter_bloc/flutter_bloc.dart';
 //import 'package:flutter/material.dart';
-import 'package:spc_flttr/fx.dart';
-import 'package:spc_flttr/globals.dart';
-import 'package:spc_flttr/inimigos.dart';
-import 'package:spc_flttr/projeteis.dart';
-import 'package:spc_flttr/shooter_game.dart';
+import 'package:spc_flttr/objetos/fx.dart';
+import 'package:spc_flttr/game/game_state.dart';
+import 'package:spc_flttr/game/globals.dart';
+import 'package:spc_flttr/objetos/inimigos.dart';
+import 'package:spc_flttr/objetos/projeteis.dart';
+import 'package:spc_flttr/game/shooter_game.dart';
 
 class Player extends SpriteComponent 
 with HasGameRef<ShooterGame>, CollisionCallbacks {
@@ -20,9 +22,10 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
   late TextComponent playerLabel;
   late Timer hitTmr;
   bool isHit = false;
+  final GameCubit gameCubit;
  // 
  Vector2 moveDirection = Vector2.zero();
-  Player():super(
+  Player(this.gameCubit):super(
            size: Vector2(50, 50),
           anchor: Anchor.center,
         ){
@@ -34,7 +37,7 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
    @override
   Future<void> onLoad() async {
     await super.onLoad();
-
+    
     sprite = await gameRef.loadSprite('spcship.png');
 
     position = gameRef.size / 2;
@@ -122,12 +125,12 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
         ),
       ]);
       add(effect);
-      game.mudaVida(-1);
+      gameCubit.mudaVidas(-1);
       hitTmr.start();
       if(other is Bullet ){
         other.removeFromParent();
       }
-      if (game.vidas<=0){
+      if (gameCubit.state.vidas<=0){
         stopShooting();
         game.add(Explosion(position: position));
         game.onGameOver();

@@ -1,17 +1,17 @@
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
-//import 'package:flame/experimental.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flame/parallax.dart';
 import 'package:flutter/material.dart';
-import 'package:spc_flttr/hud.dart';
-import 'package:spc_flttr/inimigos.dart';
-import 'package:spc_flttr/player.dart';
-import 'package:spc_flttr/upgrades.dart';
-import 'package:spc_flttr/wave.dart';
-
-// ignore: implementation_imports
+import 'package:spc_flttr/game/dados.dart';
+import 'package:spc_flttr/game/game_state.dart';
+import 'package:flame_bloc/flame_bloc.dart';
+import 'package:spc_flttr/game/hud.dart';
+import 'package:spc_flttr/objetos/inimigos.dart';
+import 'package:spc_flttr/objetos/player.dart';
+import 'package:spc_flttr/game/upgrades.dart';
+import 'package:spc_flttr/game/wave.dart';
 import 'package:flame/src/components/route.dart' as flame;
 
 class ShooterGame extends FlameGame with TapDetector, HasCollisionDetection{
@@ -20,23 +20,35 @@ class ShooterGame extends FlameGame with TapDetector, HasCollisionDetection{
   int curwave = 0;
   late List<Wave> waves;
   int actInis = 0;
-
-  int pontos = 0;
-  int vidas = 1;
+  late GameCubit gameCubit;
 
   late final SpawnComponent spawnComponent;
 
   late final RouterComponent router;
   late final DynamicJoystick  joystick;
+  
+  //late final Storage storage;
+  late final mortes;
+
+
   @override
   Future<void> onLoad() async {
     await super.onLoad();
+    //storage = Storage();
+    gameCubit = GameCubit();
+
+    add(FlameBlocProvider<GameCubit, GameState>(
+      create: () => gameCubit,
+      children: [
+        Hud(game: this),
+      ],
+    ));
 
     router = RouterComponent(
       routes: {
         'menu': flame.Route(MenuScreen.new),
         'game': flame.Route(GameScreen.new),
-        'gameover': flame.Route(()=>GameOverScreen(finalScore: pontos)),
+        'gameover': flame.Route(()=>GameOverScreen(finalScore: gameCubit.state.pontos)),
       },
       initialRoute: 'menu',
     );
@@ -54,16 +66,16 @@ class ShooterGame extends FlameGame with TapDetector, HasCollisionDetection{
     );
     add(router);
     
-    player = Player();
+    player = Player(gameCubit);
     waves = [
       Wave(
-        iniCont: 1, 
+        iniCont: 5, 
         iniTipo: [Meteoro],
         onWaveComplete: showUpgradeMenu,
         game: this,
       ),
       Wave(
-        iniCont: 5, 
+        iniCont: 3, 
         iniTipo: [XenoSquid],//XenoMusk
         onWaveComplete: showUpgradeMenu,
         game: this,
@@ -88,11 +100,19 @@ class ShooterGame extends FlameGame with TapDetector, HasCollisionDetection{
       ),
       Wave(
         iniCont: 7, 
-        iniTipo: [XenoSquid,XenoMusk],//XenoMusk
+        iniTipo: [XenoSquid,XenoMusk,Meteoro],//XenoMusk
+        onWaveComplete: showUpgradeMenu,
+        game: this,
+      ),
+       Wave(
+        iniCont: 9, 
+        iniTipo: [Meteoro],//XenoMusk
         onWaveComplete: showUpgradeMenu,
         game: this,
       ),
     ];
+
+   
 
   }
 
@@ -109,56 +129,49 @@ class ShooterGame extends FlameGame with TapDetector, HasCollisionDetection{
     add(player);
     player.startShooting();
     add(joystick);
-    print('START GAME');
+   // print('START GAME');
     waves[curwave].startWave();
+    gameCubit.togleHud();
   }
 
   void endGame(int finalScore) {
     router.pushReplacementNamed('gameover');
+
   }
 
   void onGameOver() {
-    endGame(pontos);
+    endGame(gameCubit.state.pontos);
     curwave=0;
-    pontos=0;
-    vidas=3;
+    gameCubit.togleHud();
+    gameCubit.mudaPontos(-gameCubit.state.pontos);
+    gameCubit.mudaVidas(3);
   }
 
   void nextWave() {
     curwave++;
-    print('CURWAVE: {$curwave}');
+  //  print('CURWAVE: {$curwave}');
     if (curwave < waves.length) {
       waves[curwave].startWave();
     } else {
-      // Todas as ondas foram concluídas
-    //  print("Você venceu o jogo!");
+      onGameOver();
     }
   }
 
-  void addPontos(int pt){
-    pontos += pt;
-    hud.updateScore(pontos);
-  }
-
- void mudaVida(int pt){
-   vidas += pt;
-    hud.updateLives(vidas);
-  }
-
   void showUpgradeMenu() {
-  final upgrades = [
-    Upgrade(
-      name: "Aumentar Velocidade",
-      applyEffect: () => player.speed *= 1.2,
-    ),
-    Upgrade(
-      name: "Mais Vida",
-      applyEffect: () => mudaVida(1),
-    ),
-    Upgrade(
-      name: "Aumenta taxa de Tiro",
-      applyEffect: () => player.changeShootingPeriod(0.8) ,
-    ),
+    player.stopShooting();
+    final upgrades = [
+      Upgrade(
+        name: "Aumentar Velocidade",
+        applyEffect: () => player.speed *= 1.2,
+      ),
+      Upgrade(
+        name: "Mais Vida",
+        applyEffect: () => gameCubit.mudaVidas(1),
+      ),
+      Upgrade(
+        name: "Aumenta taxa de Tiro",
+        applyEffect: () => player.changeShootingPeriod(0.8) ,
+      ),
   ];
 
   final menu = UpgradeMenu(upgrades: upgrades);
@@ -172,7 +185,7 @@ class ShooterGame extends FlameGame with TapDetector, HasCollisionDetection{
 
    @override
   void onTapUp(TapUpInfo info){
-   // joystick.hide();  
+    //joystick.hide();  
   }  
 }
 
@@ -181,8 +194,7 @@ class GameScreen extends Component with HasGameRef<ShooterGame> {
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    game.hud = Hud(game: game);
-    add(game.hud);
+    
 
     final parallax = await game.loadParallaxComponent(
       [
@@ -203,19 +215,14 @@ class GameScreen extends Component with HasGameRef<ShooterGame> {
 
     add(debugTxt);
     game.player.startShooting();
-    //game.player = Player();
 
-    //add(game.player);
-
-    //defi waves
-    
   }
 
   @override 
   void update (double dt)
   {
     super.update(dt);
-    debugTxt.text = game.waves[game.curwave].activeEnemies.toString();
+  //  debugTxt.text = game.waves[game.curwave].activeEnemies.toString();
   }
 
 }
@@ -239,12 +246,15 @@ class MenuScreen extends Component with HasGameRef<ShooterGame> {
         children: [
           RectangleComponent(
             size: Vector2(200, 50),
-            paint: Paint()..color = Colors.blue, 
+            paint: Paint()..color = Colors.white
+                            ..style = PaintingStyle.stroke
+                            ..strokeWidth = 2, 
           ),
           TextComponent(
             text: 'Start Game',
+            anchor: Anchor.center,
             textRenderer: TextPaint(style: const TextStyle(fontSize: 24, color: Colors.white)),
-            position: Vector2(50, 10),
+            position: Vector2(100, 25),
           ),
         ],
       ),
@@ -286,12 +296,15 @@ class GameOverScreen extends Component with HasGameRef<ShooterGame> {
         children: [
           RectangleComponent(
             size: Vector2(200, 50),
-            paint: Paint()..color = Colors.blue, 
+            paint: Paint()..color = Colors.white
+                            ..style = PaintingStyle.stroke
+                            ..strokeWidth = 2, 
           ),
           TextComponent(
             text: 'Restart',
+            anchor: Anchor.center,
             textRenderer: TextPaint(style: const TextStyle(fontSize: 24, color: Colors.white)),
-            position: Vector2(50, 10),
+            position: Vector2(100, 25),
           ),
         ],
       ),

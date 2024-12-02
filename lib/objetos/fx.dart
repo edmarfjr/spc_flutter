@@ -1,5 +1,5 @@
 import 'package:flame/components.dart';
-import 'package:spc_flttr/shooter_game.dart';
+import 'package:spc_flttr/game/shooter_game.dart';
 
 class Explosion extends SpriteAnimationComponent
     with HasGameReference<ShooterGame> {

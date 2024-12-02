@@ -9,7 +9,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:spc_flttr/shooter_game.dart';
+import 'package:spc_flttr/game/shooter_game.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {

@@ -4,10 +4,11 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
-import 'package:spc_flttr/fx.dart';
-import 'package:spc_flttr/globals.dart';
-import 'package:spc_flttr/projeteis.dart';
-import 'package:spc_flttr/shooter_game.dart';
+import 'package:spc_flttr/objetos/fx.dart';
+import 'package:spc_flttr/game/game_state.dart';
+import 'package:spc_flttr/game/globals.dart';
+import 'package:spc_flttr/objetos/projeteis.dart';
+import 'package:spc_flttr/game/shooter_game.dart';
 
 class Enemy extends SpriteAnimationComponent
 with HasGameRef<ShooterGame>, CollisionCallbacks {
@@ -24,7 +25,9 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
   final Vector2 spwArea;
   late Vector2 direction;
 
-  Enemy({required this.onRemoveCallback, required this.spwArea})
+  final GameCubit gameCubit;
+
+  Enemy({required this.onRemoveCallback, required this.spwArea, required this.gameCubit})
       : super(
           size: Vector2(enemySize, enemySize),
           anchor: Anchor.center,
@@ -33,7 +36,6 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    
     position = _getRandomSpawnPosition(spwArea);
     direction = _getRandomDirection();
     add(RectangleHitbox());
@@ -124,7 +126,7 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
       other.removeFromParent();
       if (vida<=0){
         onRemoveCallback();
-        game.addPontos(pontos);
+        gameCubit.mudaPontos(pontos);
         game.add(Explosion(position: position));
         removeFromParent();
          
@@ -177,7 +179,8 @@ with HasGameRef<ShooterGame>, CollisionCallbacks {
 class Meteoro extends Enemy{
   Meteoro({
     required super.onRemoveCallback, 
-    required super.spwArea
+    required super.spwArea,
+    required super.gameCubit
   });
 
   @override
@@ -204,7 +207,8 @@ class XenoSquid extends Enemy{
   
   XenoSquid({
     required super.onRemoveCallback, 
-    required super.spwArea
+    required super.spwArea,
+    required super.gameCubit
   }){
   updTrgtTmr = Timer(1.0, onTick: _updateTarget, repeat: true);
   }
@@ -243,6 +247,7 @@ class XenoMusk extends XenoSquid {
   XenoMusk({
     required super.onRemoveCallback,
     required super.spwArea,
+    required super.gameCubit
   }) {
     shootTimer = Timer(1.5, onTick: _spawnBullet, repeat: true); // Timer para disparar projéteis
   }
