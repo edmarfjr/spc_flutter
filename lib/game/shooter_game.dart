@@ -4,7 +4,6 @@ import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flame/parallax.dart';
 import 'package:flutter/material.dart';
-import 'package:spc_flttr/game/dados.dart';
 import 'package:spc_flttr/game/game_state.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:spc_flttr/game/hud.dart';
@@ -208,12 +207,6 @@ class GameScreen extends Component with HasGameRef<ShooterGame> {
     );
     add(parallax);
 
-    debugTxt = TextComponent(
-      textRenderer: TextPaint(style: const TextStyle(fontSize: 32, color: Colors.white)),
-      position: game.size*0.7,
-    );
-
-    add(debugTxt);
     game.player.startShooting();
 
   }
